@@ -18,5 +18,6 @@ namespace ShopAoBackend.Data
                 .Property(p => p.Price)
                 .HasColumnType("decimal(18,2)");
         }
+        public DbSet<User> Users { get; set; }
     }
 }

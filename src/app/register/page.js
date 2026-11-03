@@ -1,10 +1,11 @@
-
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Thêm useRouter để chuyển hướng
 import Link from "next/link";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -27,9 +28,10 @@ export default function RegisterPage() {
     setSuccess("");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
+    // 1. Validate dữ liệu nhanh ở Client
     if (form.password.length < 8) {
       setError("Mật khẩu phải có ít nhất 8 ký tự.");
       return;
@@ -40,10 +42,34 @@ export default function RegisterPage() {
       return;
     }
 
-    setError("");
-    setSuccess(
-      "Thông tin hợp lệ! Chức năng tạo tài khoản đang được phát triển."
-    );
+    try {
+      // 2. Gọi API Route xử lý đăng ký thông tin vào DB
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          username: form.username, // Gửi kèm username nếu DB cần lưu thêm
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Đăng ký thất bại.");
+      } else {
+        setError("");
+        setSuccess("Đăng ký thành công! Đang chuyển hướng sang đăng nhập...");
+        
+        // Tự động chuyển sang trang đăng nhập sau 1.5 giây
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      }
+    } catch (err) {
+      setError("Không thể kết nối đến server.");
+    }
   }
 
   return (

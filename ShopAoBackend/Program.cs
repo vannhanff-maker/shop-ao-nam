@@ -3,19 +3,17 @@ using ShopAoBackend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Lấy chuỗi kết nối
+// 1. ĐÃ SỬA: Chuyển cấu hình kết nối sang MySQL (Pomelo) thay vì SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Đăng ký DbContext với MySQL sử dụng Pomelo
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Cấu hình CORS cho Next.js
+// 2. BẬT CẤU HÌNH CORS (Bắt buộc để Next.js gọi được API)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowNextJS", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000") // URL dự án Next.js của bạn
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -34,7 +32,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
+
+// 3. Kích hoạt CORS (Đặt TRƯỚC UseAuthorization)
+app.UseCors("AllowNextJS");
+
 app.UseAuthorization();
 app.MapControllers();
 
